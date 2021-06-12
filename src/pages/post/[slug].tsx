@@ -26,9 +26,11 @@ interface PostProps {
   post: Post;
 }
 
-// export default function Post() {
-//   // TODO
-// }
+export default function Post() {
+  return (
+    <h1>pagina</h1>
+  )
+}
 
 // export const getStaticPaths = async () => {
 //   const prismic = getPrismicClient();
@@ -39,7 +41,11 @@ interface PostProps {
 
 // export const getStaticProps = async context => {
 //   const prismic = getPrismicClient();
-//   const response = await prismic.getByUID(TODO);
+//   const response = await prismic.getByUID(
+//     'posts',
+//     'utilizando-mapas-no-react-native-com-mapbox',
+//     {}
+//   );
 
-//   // TODO
+//   console.log("passouaqui")
 // };
