@@ -1,1 +1,71 @@
-// TODO
+.banner {
+    position: relative;
+    height: 400px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.content {
+    max-width: 721px;
+    margin: 5rem auto;
+
+    button {
+        font-weight: 600;
+        font-size: 1.125rem;
+        color: var(--highlight);
+        margin-top: 4rem;
+        background: transparent;
+        border: none;
+    }
+
+    a {
+        display: block;
+    }
+}
+
+.details {
+    display: flex;
+    margin-top: 1.5rem;
+
+    li {
+        font-size: 0.875rem;
+        line-height: 1rem;
+        color: var(--info);
+        list-style-type: none;
+        display: flex;
+        align-items: center;
+
+        :first-child {
+            margin-right: 0.5rem;
+        }
+    }
+
+    li + li {
+        margin-left: 1.5rem;
+    }
+}
+
+.article {
+    margin-top: 4rem;
+    font-size: 1.125rem;
+    line-height: 1.55rem;
+    text-align: justify;
+
+    h2 {
+        margin-bottom: 4rem;
+    }
+
+    p {
+        margin-top: 1.5rem;
+    }
+
+    a {
+        display: inline-block;
+        color: var(--highlight)
+    }
+
+    li {
+        margin-top: 0.5rem;
+        
+    }
+}
