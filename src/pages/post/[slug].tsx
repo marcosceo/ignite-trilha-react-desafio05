@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Link from 'next/link';
 import Image from 'next/image';
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 
@@ -14,9 +15,11 @@ import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
 import Header from '../../components/Header';
+import Comments from '../../components/Comments';
 
 interface Post {
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -34,10 +37,25 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  navigation: {
+    prevPost: {
+      uid: string;
+      data: {
+        title: string;
+      }
+    }[];
+    nextPost: {
+      uid: string;
+      data: {
+        title: string;
+      }
+    }[];
+  };
+  preview: boolean
 }
 
-export default function Post(props: PostProps): JSX.Element {
-  const { post } = props;
+export default function Post({ post, navigation, preview }: PostProps): JSX.Element {
+
   let words = [];
   post.data.content.map(item => {
     const headingWords = item.heading.split(' ');
@@ -52,7 +70,7 @@ export default function Post(props: PostProps): JSX.Element {
 
   const router = useRouter();
 
-  if(router.isFallback) {
+  if (router.isFallback) {
     return <h1>Carregando...</h1>;
   }
 
@@ -80,6 +98,9 @@ export default function Post(props: PostProps): JSX.Element {
             {`${readingTime} min`}
           </li>
         </ul>
+        {post.last_publication_date !== post.first_publication_date &&
+          <p className={styles.edited}>*editado em {format(new Date(post.last_publication_date), 'd MMM yyyy', { locale: ptBR, })}, às {format(new Date(post.last_publication_date), 'H:mm', { locale: ptBR, })}</p>
+        }
         {post.data.content.map(content => {
           return (
             <article className={styles.article} key={content.heading}>
@@ -95,6 +116,33 @@ export default function Post(props: PostProps): JSX.Element {
           )
         })}
       </main>
+      <section className={styles.navigation}>
+        {navigation?.prevPost.length > 0 && (
+          <div className={styles.prevPost}>
+            <h3>{navigation.prevPost[0].data.title}</h3>
+            <Link href={`/post/${navigation.prevPost[0].uid}`}>
+              <a>Post anterior</a>
+            </Link>
+          </div>
+        )}
+        {navigation?.nextPost.length > 0 && (
+          <div className={styles.nextPost}>
+            <h3>{navigation.nextPost[0].data.title}</h3>
+            <Link href={`/post/${navigation.nextPost[0].uid}`}>
+              <a>Próximo post</a>
+            </Link>
+          </div>
+        )}
+
+      </section>
+      <Comments />
+      {preview && (
+        <aside >
+          <Link href="/api/exit-preview">
+            <a className={commonStyles.exitPreview}>Sair do modo Preview</a>
+          </Link>
+        </aside>
+      )}
     </div>
   );
 }
@@ -115,15 +163,36 @@ export const getStaticPaths: GetStaticPaths = async () => {
   return { paths, fallback: true };
 };
 
-export const getStaticProps: GetStaticProps = async context => {
-  const { slug } = context.params;
+export const getStaticProps: GetStaticProps = async ({ params, preview = false, previewData }) => {
+  const { slug } = params;
 
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', `${slug}`, {});
+  const response = await prismic.getByUID('posts', `${slug}`, {
+    ref: previewData?.ref || null
+  });
+
+  const prevPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.first_publication_date]',
+    }
+  )
+
+  const nextPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.first_publication_date desc]',
+    }
+  )
 
   const post = {
     uid: response.uid,
     first_publication_date: response.first_publication_date,
+    last_publication_date: response.last_publication_date,
     data: {
       title: response.data.title,
       subtitle: response.data.subtitle,
@@ -141,6 +210,13 @@ export const getStaticProps: GetStaticProps = async context => {
   };
 
   return {
-    props: { post },
+    props: {
+      post,
+      navigation: {
+        prevPost: prevPost?.results,
+        nextPost: nextPost?.results
+      },
+      preview
+    },
   };
 };
